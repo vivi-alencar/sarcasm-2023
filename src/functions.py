@@ -42,7 +42,13 @@ def sarcasm_classification_performance(prediction, test_label):
     accuracy      = accuracy_score(true_label, predicted_label)
     prfs_weighted = precision_recall_fscore_support(true_label, predicted_label, average='weighted')
 
-    return accuracy, prfs_weighted
+    ret = {'loadAccuracy': accuracy,
+           'precision': prfs_weighted[0],
+           'recall': prfs_weighted[1],
+           'f1score': prfs_weighted[2]
+        }
+
+    return ret
 
 
 def attention(x, y):
@@ -249,7 +255,7 @@ def multiTask_multimodal(foldNum: int, config: config.Config):
     #model.load_weights(path)
     prediction = model.predict([test_uText, test_uAudio, test_uVisual])
     
-    performance = sarcasm_classification_performance(prediction[0], test_sarcasm_label)
+    performance = sarcasm_classification_performance(prediction[0], test_sarcasm_label)    
     print(performance)
     
     # summarize history for accuracy
@@ -272,9 +278,11 @@ def multiTask_multimodal(foldNum: int, config: config.Config):
 
     # Write log file
     log = (path + '\n' + 
-           '=============== sarcasm ===============\n' +
-           'loadAcc: '+ str(performance[0]) + '\n' +
-           'prfs_weighted: '+ str(performance[1]) + '\n'*2
+           '=============== sarcasm weighted ===============\n' +
+           f'loadAcc: {performance["loadAccuracy"]}\n' +
+           f'precision: {performance["precision"]}\n' +
+           f'recall: {performance["recall"]}\n' +
+           f'f1score: {performance["f1score"]}\n\n'
     )
     open('results/' + config.filePath() + '.txt', 'a').write(log)
     
@@ -282,3 +290,5 @@ def multiTask_multimodal(foldNum: int, config: config.Config):
     K.clear_session()
     del model      
     gc.collect()
+
+    return performance

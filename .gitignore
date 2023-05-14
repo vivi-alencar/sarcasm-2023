@@ -1,6 +1,7 @@
 # Some stuff that should not be included in the github repository
 # Don't add the datasets
-feature_extraction/
+feature_extraction/**
+!feature_extraction/README.md
 
 # Don't add results to the repo
 results/**

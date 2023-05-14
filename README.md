@@ -23,9 +23,10 @@ Created and tested with the following versions:
 It should not depend on these exact versions as they just provide a base system. All configuration of tools is provided as Docker image.
 
 ## Clone the repository
+
 ```
-git clone <URL>
-cd <NAME>
+git clone https://github.com/vivi-alencar/sarcasm-2023
+cd sarcasm-2023/
 ```
 
 ## Obtain the data
@@ -52,12 +53,13 @@ mkdir -p ~/.local/share/jupyter/runtime
 
 Start the container from a WSL2 bash. It is required that Docker Desktop is running on the Windows host.
 
+Use the following command to mount the workspace as home within the container. A specific container version is used to ensure future updates to the container will not break the program.
+
 ```
-docker run -u $(id -u):$(id -g) -it --gpus all -p 8888:8888 -v $(pwd):/home/jovyan -v /home/$(whoami)/.local/share/jupyter/runtime:/home/jovyan/.local/share/jupyter/runtime/ fleitner/testrepo
+docker run -u $(id -u):$(id -g) -it --gpus all -p 8888:8888 -v $(pwd):/home/jovyan -v /home/$(whoami)/.local/share/jupyter/runtime:/home/jovyan/.local/share/jupyter/runtime/ jupyter/tensorflow-notebook:2023-05-08
 ```
 
-
-<!-->
+<!--
 ```
 docker run -u $(id -u):$(id -g) -it --gpus all -p 8888:8888 -e GRANT_SUDO=yes --user root -v $(pwd):/home/jovyan -v /home/$(whoami)/.local/share/jupyter/runtime:/home/jovyan/.local/share/jupyter/runtime/ fleitner/testrepo
 ```

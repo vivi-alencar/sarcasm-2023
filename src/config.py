@@ -21,7 +21,8 @@ class Config:
     
     #endregion
 
-    def __init__(self, speaker_dependent: bool, modalities: str = 'tav', num_epochs: int = 200):
+    #def __init__(self, speaker_dependent: bool, modalities: str = 'tav', num_epochs: int = 200):
+    def __init__(self, speaker_dependent: bool, num_epochs: int = 200):
         '''Constructor
         :param speaker_dependent: True or False
         :param modalities: Modalities to use. Default 'tav' for text, audio and video
@@ -32,6 +33,8 @@ class Config:
 
         self._speaker_dependent = speaker_dependent
         
+        # Only do TAV for now, don't have it configurable
+        modalities = 'tav' 
         if not set(modalities) <= set('tavTAV'):
             raise ValueError('Invalid value for modality used, allowed is any combination of tav')
         self._modalities = []

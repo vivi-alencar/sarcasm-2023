@@ -11,7 +11,6 @@ from keras.layers import *
 
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 
-# needed to plot training history (loss, acc). History is set as globalon def multiTask_multimodal
 import matplotlib.pyplot as plt 
 
 import tensorflow as tf
@@ -27,10 +26,10 @@ print('Tensorflow: ' + tf.__version__)
 print('Keras: ' + keras.__version__)
 
 def sarcasm_classification_performance(prediction, test_label):
-    """TODO: Add a description
-    :param prediction: Describe parameter prediction
-    :param test_label: Describe parameter test_label
-    :return: Describe the return value
+    """Calculate evaluation metrics
+    :param prediction: predicted values
+    :param test_label: true values
+    :return: evaluation metrics: accuracy, precision, recall and f1 score
     """
     true_label=[]
     predicted_label=[]
@@ -52,10 +51,10 @@ def sarcasm_classification_performance(prediction, test_label):
 
 
 def attention(x, y):
-    """TODO: Add a description
-    :param x: Describe parameter x
-    :param y: Describe parameter y
-    :return: Describe the return value
+    """Attention mechanism as proposed by Chauhan et al.
+    :param x: first attention input
+    :param y: second attention input
+    :return: attention values
     """
     m_dash = dot([x, y], axes=[2,2])
     m = Activation('softmax')(m_dash)
@@ -63,27 +62,12 @@ def attention(x, y):
     return multiply([h_dash, x])
 
 
-def divisorGenerator(n):
-    """TODO: Add a description
-    :param n: Describe parameter n
-    :return: Describe the return value
-    """
-    large_divisors = []
-    for i in range(1, int(math.sqrt(n) + 1)):
-        if n % i == 0:
-            yield i
-            if i*i != n:
-                large_divisors.append(n / i)
-    for divisor in reversed(large_divisors):
-        yield divisor
-
-
 # flake8: noqa: E221 # multiple spaces before operator
 def featuresExtraction_original(foldNum, exMode):
-    """TODO: Add a description
-    :param foldNum: Describe parameter foldNum
-    :param exMode: Describe parameter exMode
-    :return: Describe the return value
+    """Import pre-extracted video, audio and text features
+    :param foldNum: number of folds, based on speaker dependency
+    :param exMode: True for speaker dependent, False for speaker independent
+    :return: none
     """
     global train_uVisual, train_uAudio, train_sarcasm_label
     global test_uVisual, test_uAudio, test_sarcasm_label
@@ -113,10 +97,10 @@ def featuresExtraction_original(foldNum, exMode):
     
 
 def featuresExtraction_fastext(foldNum, exMode):    
-    """TODO: Add a description
-    :param foldNum: Describe parameter foldNum
-    :param exMode: Describe parameter exMode
-    :return: Describe the return value
+    """Replace text features with fastText word embeddings
+    :param foldNum: number of folds, based on speaker dependency
+    :param exMode: True for speaker dependent, False for speaker independent
+    :return: none
     """
     global train_uText, train_sentiment_uText_implicit, train_sentiment_uText_explicit, train_emotion_uText_implicit, train_emotion_uText_explicit
     global test_uText, test_sentiment_uText_implicit, test_sentiment_uText_explicit, test_emotion_uText_implicit, test_emotion_uText_explicit
@@ -144,9 +128,9 @@ def featuresExtraction_fastext(foldNum, exMode):
 
         
 def multiTask_multimodal(foldNum: int, config: config.Config):
-    """TODO: Add a description
-    :param config: Describe parameter config
-    :return: Describe the return value
+    """Main model structure: define layers, compile, fit
+    :param config: see config.py file
+    :return: model performance
     """
     # ===========================================================================================================================================
     in_uText        = Input(shape=(train_uText.shape[1], train_uText.shape[2]), name='in_uText')
@@ -166,27 +150,25 @@ def multiTask_multimodal(foldNum: int, config: config.Config):
     # ===========================================================================================================================================
     # =================================== internal attention (multimodal attention) =============================================================
     # ===========================================================================================================================================
-    if td_uVisual.shape[1]%config.numSplit() == 0:
-        td_text   = Lambda(lambda x: K.reshape(x, (-1, int(int(x.shape[1])/config.numSplit()),config.numSplit())))(td_uText)
-        td_visual = Lambda(lambda x: K.reshape(x, (-1, int(int(x.shape[1])/config.numSplit()),config.numSplit())))(td_uVisual)
-        td_audio  = Lambda(lambda x: K.reshape(x, (-1, int(int(x.shape[1])/config.numSplit()),config.numSplit())))(td_uAudio)
-        print('td_text: ',td_text.shape)
-        print('td_visual: ',td_visual.shape)
-        print('td_audio: ',td_audio.shape)
+    td_uVisual.shape[1]%config.numSplit() == 0
+    td_text   = Lambda(lambda x: K.reshape(x, (-1, int(int(x.shape[1])/config.numSplit()),config.numSplit())))(td_uText)
+    td_visual = Lambda(lambda x: K.reshape(x, (-1, int(int(x.shape[1])/config.numSplit()),config.numSplit())))(td_uVisual)
+    td_audio  = Lambda(lambda x: K.reshape(x, (-1, int(int(x.shape[1])/config.numSplit()),config.numSplit())))(td_uAudio)
+    print('td_text: ',td_text.shape)
+    print('td_visual: ',td_visual.shape)
+    print('td_audio: ',td_audio.shape)
 
-        intAttn_tv = attention(td_text, td_visual)
-        intAttn_ta = attention(td_text, td_audio)
-        intAttn_vt = attention(td_visual, td_text)
-        intAttn_va = attention(td_visual, td_audio)
-        intAttn_av = attention(td_audio, td_visual)
-        intAttn_at = attention(td_audio, td_text)
+    intAttn_tv = attention(td_text, td_visual)
+    intAttn_ta = attention(td_text, td_audio)
+    intAttn_vt = attention(td_visual, td_text)
+    intAttn_va = attention(td_visual, td_audio)
+    intAttn_av = attention(td_audio, td_visual)
+    intAttn_at = attention(td_audio, td_text)
 
-        intAttn = concatenate([intAttn_tv, intAttn_ta, intAttn_vt, intAttn_va, intAttn_av, intAttn_at], axis=-1)
-        print('intAttn: ', intAttn.shape)
+    intAttn = concatenate([intAttn_tv, intAttn_ta, intAttn_vt, intAttn_va, intAttn_av, intAttn_at], axis=-1)
+    print('intAttn: ', intAttn.shape)
 
-    else:
-        print('choose numSplit from '+ str(list(map(int, divisorGenerator(int(td_uVisual.shape[1])))))+'')
-        return
+
 
     # ===========================================================================================================================================
     # =================================== external attention (self attention) ===================================================================
@@ -203,15 +185,15 @@ def multiTask_multimodal(foldNum: int, config: config.Config):
     merge_rnn = Dropout(config.drop())(Dense(config.td_units(), activation='relu')(merge_rnn))
     print(merge_rnn.shape)
     # ===========================================================================================================================================
-    output_sarcasm = Dense(2, activation='softmax', name='output_sarcasm')(merge_rnn) # print('output_sarcasm: ',output_sarcasm.shape)
+    output_sarcasm = Dense(2, activation='softmax', name='output_sarcasm')(merge_rnn)
     # ===========================================================================================================================================
-    output_senti_implicit = Dense(3, activation='softmax', name='output_senti_implicit')(merge_rnn) # print('output_senti_implicit: ',output_senti_implicit.shape)
+    output_senti_implicit = Dense(3, activation='softmax', name='output_senti_implicit')(merge_rnn) 
     # ===========================================================================================================================================
-    output_senti_explicit = Dense(3, activation='softmax', name='output_senti_explicit')(merge_rnn) # print('output_senti_explicit: ',output_senti_explicit.shape)
+    output_senti_explicit = Dense(3, activation='softmax', name='output_senti_explicit')(merge_rnn) 
     # ===========================================================================================================================================
-    output_emo_implicit = Dense(9, activation='sigmoid', name='output_emo_implicit')(merge_rnn) # print('output_emo_implicit: ',output_emo_implicit.shape)
+    output_emo_implicit = Dense(9, activation='sigmoid', name='output_emo_implicit')(merge_rnn) 
     # ===========================================================================================================================================
-    output_emo_explicit = Dense(9, activation='sigmoid', name='output_emo_explicit')(merge_rnn) # print('output_emo_explicit: ',output_emo_explicit.shape)
+    output_emo_explicit = Dense(9, activation='sigmoid', name='output_emo_explicit')(merge_rnn) 
     # ===========================================================================================================================================
     model = Model(inputs=[in_uText, in_uAudio, in_uVisual],
                     outputs=[output_sarcasm, output_senti_implicit, output_senti_explicit, output_emo_implicit, output_emo_explicit])
@@ -230,7 +212,6 @@ def multiTask_multimodal(foldNum: int, config: config.Config):
     print(model.summary())
 
     ###################### model training #######################
-    # TODO Initialize random to allow for consistent results for now
     np.random.seed(1)
 
     path = ('weights/' + config.filePath(long=True) + '_' +
@@ -245,14 +226,12 @@ def multiTask_multimodal(foldNum: int, config: config.Config):
                         [train_sarcasm_label, train_sentiment_uText_implicit, train_sentiment_uText_explicit, train_emotion_uText_implicit, train_emotion_uText_explicit],
                         epochs=config.numEpochs(),
                         batch_size=32,
-                        # sample_weight=train_mask_CT,
                         shuffle=True,
                         callbacks=[earlyStop_sarcasm, bestModel_sarcasm],
                         validation_data=([test_uText, test_uAudio, test_uVisual], [test_sarcasm_label,test_sentiment_uText_implicit, test_sentiment_uText_explicit,test_emotion_uText_implicit, test_emotion_uText_explicit]),
                         verbose=1)
     
     model.save_weights(path)
-    #model.load_weights(path)
     prediction = model.predict([test_uText, test_uAudio, test_uVisual])
     
     performance = sarcasm_classification_performance(prediction[0], test_sarcasm_label)    

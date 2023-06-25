@@ -2,10 +2,10 @@ import itertools
 
 class Config:
     #region Static configuration that is used for every run
-    _drop = 0.3
-    _rdrop = 0.3
-    _r_units = 300
-    _td_units = 50
+    _drop = 0.3 # dropout rate of dense layers
+    _rdrop = 0.3 # dropout rate of Bi-GRU
+    _r_units = 300 # output size of Bi-GRU
+    _td_units = 50 # output size of dense layers
 
     # numSplits depends on speaker dependency
     _numSplit = {

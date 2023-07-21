@@ -9,7 +9,7 @@
 
 # Introduction
 
-Say something
+This repository was created for a project based on the paper [Sentiment and Emotion help Sarcasm? A Multi-task Learning Framework for Multi-Modal Sarcasm, Sentiment and Emotion Analysis](https://www.aclweb.org/anthology/2020.acl-main.401/), which investigates the influence of sentiment and emotion information on the task of automatic sarcasm detection in a multimodal setting using a deep neural network model with attention mechanism. The following explains the necessary steps to set up a Jupyter Notebook environment with Docker to test the model.
 
 # Setup
 
